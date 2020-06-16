@@ -12,10 +12,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.sendStatus = exports.AbstractController = void 0;
 const Status_1 = require("./Status");
 const statuses_1 = __importDefault(require("statuses"));
 /**
- * Classe responsável por processar as informações da rota e recuperar uma sessão (se necessário)
+ * Classe responsável por processar as informações da rota e autenticar a conexão (se necessário)
  */
 class AbstractController {
     /**
@@ -70,7 +71,7 @@ exports.AbstractController = AbstractController;
 /**
  * Envia o objeto "status" como resposta (se o objeto for nulo, um código 500 junto com a mensagem "Internal server error" será enviado para a conexão)
  * @param res Resposta para o usuário
- * @param status Status que deve ser enviado para o usuário
+ * @param status Status que deve ser enviado para o usuário (se for um número, uma mensagem de status também será enviada)
  * @param alertClosedConnection Envia ao terminal o aviso de que houve uma tentativa de enviar uma resposta para uma conexão finalizada
  */
 function sendStatus(res, status, alertClosedConnection = true) {
@@ -83,10 +84,15 @@ function sendStatus(res, status, alertClosedConnection = true) {
         }
         return;
     }
-    //Verifica se "status" é inválido
-    if (!status || typeof (status.code) !== 'number') {
-        //Substitui o status por um status de erro interno "500"
-        status = new Status_1.Status(500, statuses_1.default[500]);
+    if (typeof (status) === 'number') {
+        status = new Status_1.Status(status, statuses_1.default[status]);
+    }
+    else {
+        //Verifica se "status" é inválido
+        if (!status || typeof (status.code) !== 'number') {
+            //Substitui o status por um status de erro interno "500"
+            status = new Status_1.Status(500, statuses_1.default[500]);
+        }
     }
     //Envia o estado para a conexão
     res.status(status.code).json(status.toBody());

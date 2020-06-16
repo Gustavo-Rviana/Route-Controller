@@ -1,7 +1,7 @@
 import { Request, Response, RequestHandler } from "express";
 import { Status } from "./Status";
 /**
- * Classe responsável por processar as informações da rota e recuperar uma sessão (se necessário)
+ * Classe responsável por processar as informações da rota e autenticar a conexão (se necessário)
  */
 export declare abstract class AbstractController<T> {
     /**
@@ -39,7 +39,7 @@ export declare abstract class AbstractController<T> {
 /**
  * Envia o objeto "status" como resposta (se o objeto for nulo, um código 500 junto com a mensagem "Internal server error" será enviado para a conexão)
  * @param res Resposta para o usuário
- * @param status Status que deve ser enviado para o usuário
+ * @param status Status que deve ser enviado para o usuário (se for um número, uma mensagem de status também será enviada)
  * @param alertClosedConnection Envia ao terminal o aviso de que houve uma tentativa de enviar uma resposta para uma conexão finalizada
  */
-export declare function sendStatus(res: Response, status: Status, alertClosedConnection?: boolean): void;
+export declare function sendStatus(res: Response, status: Status | number, alertClosedConnection?: boolean): void;

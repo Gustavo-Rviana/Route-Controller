@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Status = void 0;
 /**
  * Classe utilizada para retornar o estado da conexão
  */
@@ -11,7 +12,7 @@ class Status {
      */
     constructor(code, result) {
         this.code = code;
-        this.result = result !== null ? result : undefined;
+        this.result = result;
     }
     /**
      * Transforma "this.result" em um retorno válido
@@ -21,14 +22,13 @@ class Status {
      * Se "this.result" for nulo ou não definido, o resultado irá retornar undefined.
      */
     toBody() {
-        if (this.result) {
-            switch (typeof (this.result)) {
-                case 'string':
-                    return { "message": this.result };
-                case 'object':
-                    return this.result;
-                default:
-                    return { "result": this.result };
+        const type = typeof (this.result); //Type of result
+        if (this.result !== undefined) {
+            if (type === 'object' && this.result !== null) {
+                return this.result;
+            }
+            else {
+                return { [type === 'string' ? 'message' : "result"]: this.result };
             }
         }
         return undefined;
@@ -39,7 +39,7 @@ class Status {
      */
     static parseStatusResult(reqObj) {
         if (reqObj) {
-            if (reqObj.message) {
+            if (typeof (reqObj.message) === 'string') {
                 return reqObj.message;
             }
             else if (reqObj.result) {
