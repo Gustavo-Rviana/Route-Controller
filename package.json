@@ -1,6 +1,6 @@
 {
   "name": "route-controller",
-  "version": "1.0.05",
+  "version": "1.0.8",
   "description": "Express route controller based on status return",
   "main": "index.js",
   "scripts": {

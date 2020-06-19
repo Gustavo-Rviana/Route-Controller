@@ -37,34 +37,29 @@ class AbstractController {
          * @param req Requisição enviada pela conexão
          * @param res Resposta que deve ser enviada para a conexão
          */
-        return (req, res) => {
-            /**
-             * Cria uma função assíncrona que processa os dados do controlador
-             */
-            (() => __awaiter(this, void 0, void 0, function* () {
-                try {
-                    //Cria uma variável responsável por armazenar a autenticação da conexão
-                    var auth = null;
-                    //Verifica se a rota precisa estar autenticada
-                    if (me.needAuth) {
-                        //Autentica a conexão
-                        auth = yield me.authenticate(req);
-                        //Verifica se a conexão foi autenticada
-                        if (!auth) {
-                            //Envia a conexão que é preciso estar autenticado
-                            res.status(401).json({ "message": statuses_1.default[401] });
-                            return;
-                        }
+        return (req, res) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                //Cria uma variável responsável por armazenar a autenticação da conexão
+                var auth = null;
+                //Verifica se a rota precisa estar autenticada
+                if (me.needAuth) {
+                    //Autentica a conexão
+                    auth = yield me.authenticate(req);
+                    //Verifica se a conexão foi autenticada
+                    if (!auth) {
+                        //Envia a conexão que é preciso estar autenticado
+                        res.status(401).json({ "message": statuses_1.default[401] });
+                        return;
                     }
-                    //Executa a rota e envia o resultado para a conexão
-                    sendStatus(res, yield me.onRouteCalled(req, res, auth), false);
                 }
-                catch (error) {
-                    //Se houver um erro, executa onNoHandledError para processar o erro da rota
-                    me.onNoHandledError(error, res);
-                }
-            }))().then();
-        };
+                //Executa a rota e envia o resultado para a conexão
+                sendStatus(res, yield me.onRouteCalled(req, res, auth), false);
+            }
+            catch (error) {
+                //Se houver um erro, executa onNoHandledError para processar o erro da rota
+                me.onNoHandledError(error, res);
+            }
+        });
     }
 }
 exports.AbstractController = AbstractController;
