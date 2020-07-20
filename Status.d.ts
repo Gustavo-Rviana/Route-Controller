@@ -1,7 +1,7 @@
 /**
  * Classe utilizada para retornar o estado da conexão
  */
-export declare class Status {
+export declare class Status<T = any> {
     /**
      * Código do estado
      */
@@ -9,13 +9,13 @@ export declare class Status {
     /**
      * Resultado que deve ser enviado pela conexão
      */
-    result: any;
+    result: T;
     /**
      * Inicializa a classe
      * @param code Código de retorno (http code)
      * @param result Objeto que deve ser enviado na conexão
      */
-    constructor(code: number, result?: any);
+    constructor(code: number, result?: T);
     /**
      * Transforma "this.result" em um retorno válido
      * Se o tipo de "this.result" for object, o corpo inteiro do objeto será retornado.

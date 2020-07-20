@@ -33,8 +33,9 @@ export declare abstract class AbstractController<T> {
     abstract authenticate(req: Request): Promise<T>;
     /**
      * Transforma o controller em um middleware
+     * @param handler Nome do handler que será executado. (O handler será iniciado com as mesmas configurações de "onRouteCalled")
      */
-    configure(): RequestHandler;
+    configure(handlerName?: string): RequestHandler;
 }
 /**
  * Envia o objeto "status" como resposta (se o objeto for nulo, um código 500 junto com a mensagem "Internal server error" será enviado para a conexão)

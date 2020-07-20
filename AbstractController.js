@@ -28,10 +28,16 @@ class AbstractController {
     }
     /**
      * Transforma o controller em um middleware
+     * @param handler Nome do handler que será executado. (O handler será iniciado com as mesmas configurações de "onRouteCalled")
      */
-    configure() {
-        /* Cria a variável que permite recuperar o controlador dentro da rota */
-        const me = this;
+    configure(handlerName) {
+        if (!handlerName) {
+            handlerName = this.onRouteCalled.name;
+        }
+        const handler = this[handlerName];
+        if (!handler) {
+            throw new Error(`O handler "${handlerName}" não existe no controlador "${Object.getPrototypeOf(this).constructor.name}".`);
+        }
         /**
          * Cria um middleware para processar as informações do controller
          * @param req Requisição enviada pela conexão
@@ -42,9 +48,9 @@ class AbstractController {
                 //Cria uma variável responsável por armazenar a autenticação da conexão
                 var auth = null;
                 //Verifica se a rota precisa estar autenticada
-                if (me.needAuth) {
+                if (this.needAuth) {
                     //Autentica a conexão
-                    auth = yield me.authenticate(req);
+                    auth = yield this.authenticate(req);
                     //Verifica se a conexão foi autenticada
                     if (!auth) {
                         //Envia a conexão que é preciso estar autenticado
@@ -53,11 +59,11 @@ class AbstractController {
                     }
                 }
                 //Executa a rota e envia o resultado para a conexão
-                sendStatus(res, yield me.onRouteCalled(req, res, auth), false);
+                sendStatus(res, yield handler(req, res, auth), false);
             }
             catch (error) {
                 //Se houver um erro, executa onNoHandledError para processar o erro da rota
-                me.onNoHandledError(error, res);
+                this.onNoHandledError(error, res);
             }
         });
     }
