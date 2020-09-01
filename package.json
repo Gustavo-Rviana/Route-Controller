@@ -1,28 +1,28 @@
 {
-  "name": "route-controller",
-  "version": "1.0.13",
-  "description": "Express route controller based on status return",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "i": "npm install --only=prod"
-  },
-  "author": "Gustavo Viana",
-  "license": "ISC",
-  "preferGlobal": true,
-  "dependencies": {
-    "body-parser": "^1.19.0",
-    "express": "^4.17.1"
-  },
-  "devDependencies": {
-    "@types/express": "^4.17.6",
-    "@types/node": "^12.12.47",
-    "@types/statuses": "^1.5.0",
-    "taskcleaner": "git+https://github.com/Gustavo-Rviana/Node-Task-Clear.git"
-  },
-  "keywords": [
-    "express",
-    "controller",
-    "api"
-  ]
+    "name": "route-controller",
+    "version": "2.0.0",
+    "description": "Express route controller based on status return",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "tsc --build tsconfig.json"
+    },
+    "author": "Gustavo Viana",
+    "license": "ISC",
+    "dependencies": {
+        "body-parser": "^1.19.0",
+        "express": "^4.17.1"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.6",
+        "@types/node": "^12.12.47",
+        "@types/statuses": "^1.5.0",
+        "ts-node": "^9.0.0",
+        "typescript": "^4.0.2"
+    },
+    "keywords": [
+        "express",
+        "controller",
+        "api"
+    ]
 }
