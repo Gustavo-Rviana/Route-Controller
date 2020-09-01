@@ -1,46 +1,44 @@
 import { Request, Response, RequestHandler } from "express";
+import { Requirement } from "./Requirement";
+import { Options } from "./Options";
 import { Status } from "./Status";
 /**
- * Classe responsável por processar as informações da rota e autenticar a conexão (se necessário)
+ * Class responsible for processing route information.
  */
-export declare abstract class AbstractController<T> {
+export declare abstract class AbstractController<T extends Options = Options> {
+    private readonly _requirements;
     /**
-     * Responsável por informar ao controlador se a conexão deve estar autenticada
+     * Configure the controller
+     * @param requirements Controller requirements
      */
-    readonly needAuth: boolean;
+    constructor(...requirements: Requirement[]);
     /**
-     * Inicializa o construtor
-     * @param needAuth Informa ao controlador se a conexão deve estar autenticada
+     * Run the route with the requirements options
+     * @param req Connection request
+     * @param res Connection response
+     * @param options Route options
      */
-    constructor(needAuth: boolean);
+    abstract onRouteCalled(req: Request, res: Response, options: T): Promise<Status>;
     /**
-     * Executa a rota com as configurações iniciais (como autenticação por exemplo) já processadas
-     * @param req Requisição feita pelo usuário
-     * @param res Resposta que deve ser enviada pelo usuário (normalmente não é usado por conta do retorno de um "Status")
-     * @param auth Autenticação da conexão
-     */
-    abstract onRouteCalled(req: Request, res: Response, auth: T): Promise<Status>;
-    /**
-     * Função chamada pelo controlador quando ocorre um erro não manipulado
-     * @param error Erro detectado
-     * @param res Resposta que deve ser enviada para o usuário
+     * Process an unhandled error
+     * @param error Unhandled error
+     * @param res Connection response
      */
     abstract onNoHandledError(error: Error, res: Response): void;
     /**
-     * Autentica a requisição
-     * @param req Requisição contendo os dados da autenticação
+     * Get controller requirements
      */
-    abstract authenticate(req: Request): Promise<T>;
+    get requirements(): readonly Requirement[];
     /**
-     * Transforma o controller em um middleware
-     * @param handler Nome do handler que será executado. (O handler será iniciado com as mesmas configurações de "onRouteCalled")
+     * Transform the controller into middleware
+     * @param handler Name of the handler to be executed. (The handler will start with the same settings as "onRouteCalled")
      */
     configure(handlerName?: string): RequestHandler;
 }
 /**
- * Envia o objeto "status" como resposta (se o objeto for nulo, um código 500 junto com a mensagem "Internal server error" será enviado para a conexão)
- * @param res Resposta para o usuário
- * @param status Status que deve ser enviado para o usuário (se for um número, uma mensagem de status também será enviada)
- * @param alertClosedConnection Envia ao terminal o aviso de que houve uma tentativa de enviar uma resposta para uma conexão finalizada
+ * Send the object "status" as a response (if the object is null, a code 500 along with the message "Internal server error" will be sent to the connection)
+ * @param res Connection response
+ * @param status Status that must be sent to the connection (if it is a number, a status message will also be sent)
+ * @param alertClosedConnection Sends to the terminal that an attempt was made to send a response to a terminated connection
  */
 export declare function sendStatus(res: Response, status: Status | number, alertClosedConnection?: boolean): void;

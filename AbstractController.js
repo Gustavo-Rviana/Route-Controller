@@ -13,56 +13,66 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendStatus = exports.AbstractController = void 0;
+const StatusError_1 = require("./StatusError");
 const Status_1 = require("./Status");
 const statuses_1 = __importDefault(require("statuses"));
 /**
- * Classe responsável por processar as informações da rota e autenticar a conexão (se necessário)
+ * Class responsible for processing route information.
  */
 class AbstractController {
     /**
-     * Inicializa o construtor
-     * @param needAuth Informa ao controlador se a conexão deve estar autenticada
+     * Configure the controller
+     * @param requirements Controller requirements
      */
-    constructor(needAuth) {
-        this.needAuth = needAuth;
+    constructor(...requirements) {
+        this._requirements = requirements || [];
     }
     /**
-     * Transforma o controller em um middleware
-     * @param handler Nome do handler que será executado. (O handler será iniciado com as mesmas configurações de "onRouteCalled")
+     * Get controller requirements
+     */
+    get requirements() {
+        return this._requirements;
+    }
+    /**
+     * Transform the controller into middleware
+     * @param handler Name of the handler to be executed. (The handler will start with the same settings as "onRouteCalled")
      */
     configure(handlerName) {
-        if (!handlerName) {
+        //If "handlerName" is null, retrieves the name of "this.onRouteCalled"
+        if (!handlerName)
             handlerName = this.onRouteCalled.name;
+        //Throws an error if no handler is found
+        if (!this[handlerName]) {
+            throw new Error(`The handler "${handlerName}" does not exist in the controller "${Object.getPrototypeOf(this).constructor.name}".`);
         }
-        const handler = this[handlerName];
-        if (!handler) {
-            throw new Error(`O handler "${handlerName}" não existe no controlador "${Object.getPrototypeOf(this).constructor.name}".`);
-        }
-        /**
-         * Cria um middleware para processar as informações do controller
-         * @param req Requisição enviada pela conexão
-         * @param res Resposta que deve ser enviada para a conexão
-         */
+        //Retrieves the handler and links the function to the owner class
+        const handler = this[handlerName].bind(this);
+        //Return RequestHandler
         return (req, res) => __awaiter(this, void 0, void 0, function* () {
             try {
-                //Cria uma variável responsável por armazenar a autenticação da conexão
-                var auth = null;
-                //Verifica se a rota precisa estar autenticada
-                if (this.needAuth) {
-                    //Autentica a conexão
-                    auth = yield this.authenticate(req);
-                    //Verifica se a conexão foi autenticada
-                    if (!auth) {
-                        //Envia a conexão que é preciso estar autenticado
-                        res.status(401).json({ "message": statuses_1.default[401] });
+                //Create route options
+                let options = {};
+                //Goes through all the requirements
+                for (let i = 0; i < this._requirements.length; i++) {
+                    const requirement = this._requirements[i];
+                    //Checks whether the requisition owner has the necessary permission
+                    if (!(yield requirement.load(req, res, options))) {
+                        //if not, it returns the error that the application made available
+                        sendStatus(res, requirement.getError(options));
                         return;
                     }
                 }
-                //Executa a rota e envia o resultado para a conexão
-                sendStatus(res, yield handler(req, res, auth), false);
+                //If not, it returns the error that the application made available
+                sendStatus(res, yield handler(req, res, options), false);
             }
             catch (error) {
-                //Se houver um erro, executa onNoHandledError para processar o erro da rota
+                //If the error thrown is a StatusError
+                if (error instanceof StatusError_1.StatusError) {
+                    //Transforms the error into a state and sends it to the connection
+                    sendStatus(res, error.toStatus());
+                    return;
+                }
+                //If not a StatusError, invoke "onNoHandledError"
                 this.onNoHandledError(error, res);
             }
         });
@@ -70,32 +80,21 @@ class AbstractController {
 }
 exports.AbstractController = AbstractController;
 /**
- * Envia o objeto "status" como resposta (se o objeto for nulo, um código 500 junto com a mensagem "Internal server error" será enviado para a conexão)
- * @param res Resposta para o usuário
- * @param status Status que deve ser enviado para o usuário (se for um número, uma mensagem de status também será enviada)
- * @param alertClosedConnection Envia ao terminal o aviso de que houve uma tentativa de enviar uma resposta para uma conexão finalizada
+ * Send the object "status" as a response (if the object is null, a code 500 along with the message "Internal server error" will be sent to the connection)
+ * @param res Connection response
+ * @param status Status that must be sent to the connection (if it is a number, a status message will also be sent)
+ * @param alertClosedConnection Sends to the terminal that an attempt was made to send a response to a terminated connection
  */
 function sendStatus(res, status, alertClosedConnection = true) {
-    //Verifica se a conexão foi encerrada
-    if (res.finished) {
-        //Verifica se um aviso deve ser enviada ao console
-        if (alertClosedConnection) {
-            //Envia um aviso ao console
-            console.warn('AVISO: Houve uma tentativa de envio de resposta para uma conexão fechada!');
-        }
+    if (res.finished && alertClosedConnection) {
+        console.warn('NOTICE: An attempt was made to send a response to a closed connection!');
+    }
+    if (res.finished)
         return;
+    if (typeof (status) === 'number' || !(status instanceof Status_1.Status)) {
+        status = new Status_1.Status(status || 500, statuses_1.default[status || 500]);
     }
-    if (typeof (status) === 'number') {
-        status = new Status_1.Status(status, statuses_1.default[status]);
-    }
-    else {
-        //Verifica se "status" é inválido
-        if (!status || typeof (status.code) !== 'number') {
-            //Substitui o status por um status de erro interno "500"
-            status = new Status_1.Status(500, statuses_1.default[500]);
-        }
-    }
-    //Envia o estado para a conexão
+    //Send the state to connection
     res.status(status.code).json(status.toBody());
 }
 exports.sendStatus = sendStatus;
